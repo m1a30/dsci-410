@@ -1,0 +1,67 @@
+---
+title: "Chi_square_test"
+output: html_document
+date: "2024-05-09"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r importing data}
+library(stats)
+
+ACS_eugene <- read.csv("data/acs_5_yr_age_eugene.csv")
+ACS_springfield <- read.csv("data/acs_age_sprinfield.csv")
+CAHOOTS_eugene <- read.csv("data/cahoots_age_eugene.csv")
+CAHOOTS_springfield <- read.csv("data/cahoots_age_springfield.csv")
+
+# names(df) <- c("NewColumnName1", "NewColumnName2", ...)
+names(CAHOOTS_eugene) <- c("Age.Groups", "Age.Group.Totals")
+
+names(CAHOOTS_springfield) <- c("Age.Groups", "Age.Group.Totals")
+```
+
+```{r}
+
+
+# Observed counts from CAHOOTS data
+observed_counts_eug <- c(2, 62, 444, 1110, 1883, 2322, 2626, 2833, 2550, 2486, 1909, 2455, 2083, 1545, 1131, 480, 188, 159)
+
+# Calculate the total counts in CAHOOTS data
+total_counts_cahoots_eug <- sum(observed_counts_eug)
+
+# ACS data proportions, calculated by dividing each group's count by the total of all groups
+acs_proportions_eug <- c(6878, 7685, 7316, 14930, 24115, 16338, 11558, 9825, 10579, 8296, 9854, 7098, 9356, 10318, 9423, 6729, 4343, 3289) / sum(c(6878, 7685, 7316, 14930, 24115, 16338, 11558, 9825, 10579, 8296, 9854, 7098, 9356, 10318, 9423, 6729, 4343, 3289))
+
+# Adjust ACS proportions to match the total counts in CAHOOTS data
+expected_counts_eug_acs <- acs_proportions_eug * total_counts_cahoots_eug
+
+# Running the Chi-Square Goodness of Fit Test
+chi_square_result_eug <- chisq.test(x = observed_counts_eug, p = expected_counts_eug_acs / sum(expected_counts_eug_acs))
+
+# Printing the result
+print(chi_square_result_eug)
+
+
+```
+
