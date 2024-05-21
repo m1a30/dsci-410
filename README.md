@@ -24,8 +24,8 @@ The data that I’m using to address research questions are the CAHOOTS 2021, 20
 ## Analytical steps
 - For question 1, I have made a histogram to visualize the distribution of ages of CAHOOTS calls and found the summary statistics of mean, mode, min, and max values
      - This was done using the packages of statistics, numpy, seaborn, and matplotlib.pyplot
-- For question 2 - tba
-- For question 3 - tba
+- For question 2 - I created a heatmap of mean squared error to find the differences in age distributions between the different "Reasons for Dispatch", and significant resulting visualizations to help see the differences and similarities in the distributions.
+- For question 3 - I need to create a visualization to help see the similarities and differences between the distributions of Eugene and Springfield based on CAHOOTS data. I also ran a KS test to see if the distributions were significantly different, and t test to see how the means of the two differed.
 - For the 4th question I’m running a statistical test to see if the observed data from CAHOOTS matches up with estimated values from the ACS data from each city 
 - In order to do this, I had to move over to R and import the stats library to use the chi-squared test function, to run the Chi-Squared Test for Given Probabilities
 - This method is used when there’s an expected probability known beforehand and in this case the ACS data is being used as the expected counts/probabilities of ages in Eugene and Springfield. Then this is being compared to the observed counts of the CAHOOTS data. 
