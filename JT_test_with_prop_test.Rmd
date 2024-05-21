@@ -1,0 +1,300 @@
+---
+title: "CAHOOTS vs ACS Stat Test"
+output: html_document
+date: "2024-05-07"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r importing data}
+
+ACS_eugene <- read.csv("analysis/data/acs_5_yr_age_eugene.csv")
+ACS_springfield <- read.csv("analysis/data/acs_age_sprinfield.csv")
+CAHOOTS_eugene <- read.csv("analysis/data/cahoots_age_eugene.csv")
+CAHOOTS_springfield <- read.csv("analysis/data/cahoots_age_springfield.csv")
+
+# names(df) <- c("NewColumnName1", "NewColumnName2", ...)
+names(CAHOOTS_eugene) <- c("Age.Groups", "Age.Group.Totals")
+
+names(CAHOOTS_springfield) <- c("Age.Groups", "Age.Group.Totals")
+
+```
+
+```{r Jonckheere-Terpstra Test}
+library(DescTools)
+```
+
+```{r test with fake data}
+
+# Set seed for reproducibility
+set.seed(123)
+
+# Generate fake data
+# Let's create three groups with different distributions
+group1 <- rnorm(20, mean = 10, sd = 2)
+group2 <- rnorm(20, mean = 15, sd = 2)
+group3 <- rnorm(20, mean = 20, sd = 2)
+
+# Combine the data into a single vector
+data <- c(group1, group2, group3)
+
+# Create a grouping factor
+groups <- rep(1:3, each = 20)
+
+# Perform the Jonckheere-Terpstra test
+result <- JonckheereTerpstraTest(data, groups)
+
+# View the test result
+print(result)
+
+print(group1)
+print(group2)
+print(group3)
+```
+```{r prelim test on real data}
+
+# Merge the two data frames by Age.Group
+merged_data_eug <- merge(ACS_eugene, CAHOOTS_eugene, by = "Age.Groups", suffixes = c("ACS", "CAHOOTS"))
+
+
+# Run the Jonckheere-Terpstra test
+result <- JonckheereTerpstraTest(merged_data_eug$Age.Group.TotalsACS, merged_data_eug$Age.Group.TotalsCAHOOTS)
+
+# View the test result
+print(result)
+
+
+
+```
+
+```{r visualizing the differences to see ordered trend}
+library(ggplot2)
+
+# Convert Age.Groups to a factor with custom order
+CAHOOTS_eugene$Age.Groups <- factor(CAHOOTS_eugene$Age.Groups, levels = unique(CAHOOTS_eugene$Age.Groups))
+
+# Create a bar plot
+ggplot(data = CAHOOTS_eugene, aes(x = Age.Groups, y = Age.Group.Totals)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(x = "Age Groups", y = "Group Totals", title = "Group Totals by Age Groups") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+```
+
+```{r visualizing the differences to see ordered trend for ACS}
+library(ggplot2)
+
+# Convert Age.Groups to a factor with custom order
+ACS_eugene$Age.Groups <- factor(ACS_eugene$Age.Groups, levels = unique(ACS_eugene$Age.Groups))
+
+# Create a bar plot
+ggplot(data = ACS_eugene, aes(x = Age.Groups, y = Age.Group.Totals)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(x = "Age Groups", y = "Group Totals", title = "Group Totals by Age Groups") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+```
+```{r visualizing eugene}
+
+total_ACS_eug <- sum(merged_data_eug$Age.Group.TotalsACS)
+total_CAHOOTS_eug <- sum(merged_data_eug$Age.Group.TotalsCAHOOTS)
+
+
+# making a dataframe with all of the proportions
+
+proportions_ACS_eug <- (merged_data_eug$Age.Group.TotalsACS)/total_ACS_eug
+
+proportions_CAHOOTS_eug <- (merged_data_eug$Age.Group.TotalsCAHOOTS)/total_CAHOOTS_eug
+
+proportions_eug <- data.frame(Age_Groups = merged_data_eug,
+                             Proportion_ACS = proportions_ACS_eug,
+                             Proportion_CAHOOTS = proportions_CAHOOTS_eug)
+
+proportions_eug
+```
+```{r visualizing eugene pt 2}
+library(reshape2)
+
+data_melted_eug <- melt(proportions_eug, id.vars = "Age_Groups.Age.Groups", 
+                    measure.vars = c("Proportion_ACS", "Proportion_CAHOOTS"), 
+                    variable.name = "Group", value.name = "Proportion")
+
+print(levels(data_melted_eug$Age_Groups.Age.Groups))
+print(names(data_melted_eug))
+
+data_melted_eug$Age_Groups.Age.Groups <- factor(data_melted_eug$Age_Groups.Age.Groups, 
+                                 levels = c("Under 5 years", "5 to 9 years", "10 to 14 years", 
+                                            "15 to 19 years", "20 to 24 years", "25 to 29 years", 
+                                            "30 to 34 years", "35 to 39 years", "40 to 44 years", 
+                                            "45 to 49 years", "50 to 54 years", "55 to 59 years", 
+                                            "60 to 64 years", "65 to 69 years", "70 to 74 years", 
+                                            "75 to 79 years", "80 to 84 years", "85 years and over"))
+
+ggplot(data_melted_eug, aes(x = Age_Groups.Age.Groups
+, y = Proportion, fill = Group)) + 
+  geom_bar(stat = "identity", position = position_dodge(width = 1.2), color="black") + 
+  labs(title = "Eugene Proportions of Age Groups in ACS and CAHOOTS", 
+       x = "Age Groups", 
+       y = "Proportion") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+  scale_fill_manual(values = c("Proportion_ACS" = "blue", "Proportion_CAHOOTS" = "red"))
+
+```
+
+```{r visualizing the differences to see ordered trend cahoots, springfield}
+library(ggplot2)
+
+# Convert Age.Groups to a factor with custom order
+CAHOOTS_springfield$Age.Groups <- factor(CAHOOTS_springfield$Age.Groups, levels = unique(CAHOOTS_springfield$Age.Groups))
+
+# Create a bar plot
+ggplot(data = CAHOOTS_springfield, aes(x = Age.Groups, y = Age.Group.Totals)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(x = "Age Groups", y = "Group Totals", title = "CAHOOTS Group Totals by Age Groups Springfield") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+
+```{r visualizing the differences to see ordered trend for ACS}
+library(ggplot2)
+
+# Convert Age.Groups to a factor with custom order
+ACS_springfield$Age.Groups <- factor(ACS_springfield$Age.Groups, levels = unique(ACS_springfield$Age.Groups))
+
+# Create a bar plot
+ggplot(data = ACS_springfield, aes(x = Age.Groups, y = Age.Group.Totals)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(x = "Age Groups", y = "Group Totals", title = "Springfield ACS Group Totals by Age Groups") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+```
+
+
+```{r test on springfield data}
+# Merge the two data frames by Age.Group
+merged_data_sp <- merge(ACS_springfield, CAHOOTS_springfield, by = "Age.Groups", suffixes = c("ACS", "CAHOOTS"))
+
+
+# Run the Jonckheere-Terpstra test
+result_sp <- JonckheereTerpstraTest(merged_data_sp$Age.Group.TotalsACS, merged_data_sp$Age.Group.TotalsCAHOOTS)
+
+# View the test result
+print(result_sp)
+```
+```{r visualizing springfield}
+total_ACS_sp <- sum(merged_data_sp$Age.Group.TotalsACS)
+total_CAHOOTS_sp <- sum(merged_data_sp$Age.Group.TotalsCAHOOTS)
+
+
+# making a dataframe with all of the proportions
+
+proportions_ACS_sp <- (merged_data_sp$Age.Group.TotalsACS)/total_ACS_sp
+
+proportions_CAHOOTS_sp <- (merged_data_sp$Age.Group.TotalsCAHOOTS)/total_CAHOOTS_sp
+
+proportions_sp <- data.frame(Age_Groups = merged_data_sp,
+                             Proportion_ACS = proportions_ACS_sp,
+                             Proportion_CAHOOTS = proportions_CAHOOTS_sp)
+
+proportions_sp
+```
+```{r prop test function}
+# Function to run prop.test for each age group
+run_prop_tests_for_all_age_groups <- function(data, total_acs, total_cahoots) {
+  results <- list()
+  age_groups <- data$Age_Groups.Age.Groups
+  
+  for (i in 1:nrow(data)) {
+    age_group <- data$Age_Groups.Age.Groups[i]
+    acs_total <- data$Age_Groups.Age.Group.TotalsACS[i]
+    cahoots_total <- data$Age_Groups.Age.Group.TotalsCAHOOTS[i]
+    
+    # Perform prop.test
+    test_result <- prop.test(c(acs_total, cahoots_total), c(total_acs, total_cahoots))
+    
+    # Store result
+    results[[age_group]] <- test_result
+  }
+  return(results)
+}
+```
+
+
+
+```{r}
+# the order for the dataframe rows is the same as for eugene, so follow what it says for those results when interpreting! 
+
+# Total counts for ACS and CAHOOTS
+total_acs_springfield <- sum(proportions_sp$Age_Groups.Age.Group.TotalsACS)
+total_cahoots_springfield <- sum(proportions_sp$Age_Groups.Age.Group.TotalsCAHOOTS)
+
+
+# Run the prop.test for all age groups in the dataframe
+results_springfield <- run_prop_tests_for_all_age_groups(proportions_sp, total_acs_springfield, total_cahoots_springfield)
+
+
+```
+
+```{r prop.test for eugene}
+
+# Assuming proportions_sp is your dataframe
+# Total counts for ACS and CAHOOTS
+total_acs_eugene <- sum(proportions_eug$Age_Groups.Age.Group.TotalsACS)
+total_cahoots_eugene <- sum(proportions_eug$Age_Groups.Age.Group.TotalsCAHOOTS)
+
+# Run the prop.test for all age groups in the dataframe
+results_eugene <- run_prop_tests_for_all_age_groups(proportions_eug, total_acs_eugene, total_cahoots_eugene)
+
+```
+
+```{r stat test for proportions}
+library(stats)
+prop.test(only_props_sp)
+
+```
+
+```{r}
+library(reshape2)
+
+data_melted <- melt(proportions_sp, id.vars = "Age_Groups.Age.Groups", 
+                    measure.vars = c("Proportion_ACS", "Proportion_CAHOOTS"), 
+                    variable.name = "Group", value.name = "Proportion")
+
+data_melted
+
+
+library(ggplot2)
+ggplot(data_melted, aes(x = Age_Groups.Age.Groups
+, y = Proportion, fill = Group)) + 
+  geom_bar(stat = "identity", position = position_dodge(width = 1.2), color="black") + 
+  labs(title = "Springfield Proportions of Age Groups in ACS and CAHOOTS", 
+       x = "Age Groups", 
+       y = "Proportion") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+  scale_fill_manual(values = c("Proportion_ACS" = "blue", "Proportion_CAHOOTS" = "red"))
+```
