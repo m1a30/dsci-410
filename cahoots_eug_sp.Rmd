@@ -1,0 +1,62 @@
+---
+title: "ks_test"
+output: html_document
+date: "2024-05-18"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r import data}
+
+eugene_CAHOOTS <- read.csv("cahoots_age_ks.csv")
+springfield_CAHOOTS <- read.csv("cahoots_age_sp_ks.csv")
+```
+
+
+```{r}
+hist(eugene_CAHOOTS$Age)
+```
+
+
+```{r}
+hist(springfield_CAHOOTS$Age)
+```
+```{r could be helpful to overlay these graphs}
+```
+
+
+```{r}
+ks_test_result <- ks.test(eugene_CAHOOTS$Age, springfield_CAHOOTS$Age)
+print(ks_test_result)
+
+# tells us that the overall distributions are different
+
+```
+
+```{r}
+#  stats for Eugene
+eugene_stats <- summary(eugene_CAHOOTS$Age)
+
+#  stats for Springfield
+springfield_stats <- summary(springfield_CAHOOTS$Age)
+
+cat("Eugene:\n", eugene_stats)
+cat("Springfield:\n", springfield_stats)
+mean(eugene_CAHOOTS$Age)
+mean(springfield_CAHOOTS$Age)
+
+length(eugene_CAHOOTS$Age)
+length(springfield_CAHOOTS$Age)
+```
+
+```{r t test}
+
+
+t_test_result <- t.test(eugene_CAHOOTS$Age, springfield_CAHOOTS$Age, alternative = "two.sided")
+print(t_test_result)
+
+# tells us that the means are similar
+
+```
