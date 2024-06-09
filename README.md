@@ -14,7 +14,7 @@ The data that I’m using to address research questions are the CAHOOTS 2021, 20
 - I loaded my CAHOOTS 2021 and 2022, as well as the CAHOOTS 2023 data into my Jupyter Notebook using pandas read_csv function
 - Then I merged the two datasets together using pandas merge
 - I wanted to tackle what to do with the NA values so I explored whether there was a correlation between reason for dispatch and whether or not there was a NA value for age.
-- I found some insight into the reason for dispatch and whether or not there was an NA value for age, but ultimately decided to drop the NA values for the rest of my cleaning process
+- I found that when breaking down the missing age values, the reasons for dispatch of “Information Not Available” had 60% missing values, and “Check Welfare” had around 55% missing values, the other call classes had between 20%-40% of missing values. I attribute the larger percentages of missing age values to the fact that collecting demographic data, such as age, during an emergency isn’t always the most important thing. I ultimately decided to drop the NA values for the rest of my cleaning process. 
 - The first dataframe I made for analysis was the dataframe for just age, so I dropped the columns I didn’t need (all but age) and the NA values
 - Similarly, I made an Age and Reason for Dispatch Dataframe following the same steps as above
 - I did the same to make an Age and City Dataframe 
@@ -22,19 +22,34 @@ The data that I’m using to address research questions are the CAHOOTS 2021, 20
 - Once I had the ACS data cleaned, I altered the CAHOOTS data to be in the same format, for easier comparison 
 
 ## Analytical steps
-- For question 1, I have made a histogram to visualize the distribution of ages of CAHOOTS calls and found the summary statistics of mean, mode, min, and max values
+- For question 1, I made a histogram to visualize the distribution of ages of CAHOOTS calls and found the summary statistics of mean, mode, min, and max values
      - This was done using the packages of statistics, numpy, seaborn, and matplotlib.pyplot
-- For question 2 - I created a heatmap of mean squared error to find the differences in age distributions between the different "Reasons for Dispatch", and significant resulting visualizations to help see the differences and similarities in the distributions.
-- For question 3 - I need to create a visualization to help see the similarities and differences between the distributions of Eugene and Springfield based on CAHOOTS data. I also ran a KS test to see if the distributions were significantly different, and t test to see how the means of the two differed.
-- For the 4th question I’m running a statistical test to see if the observed data from CAHOOTS matches up with estimated values from the ACS data from each city
-
-- (the following steps need to be updated) 
-- In order to do this, I had to move over to R and import the stats library to use the chi-squared test function, to run the Chi-Squared Test for Given Probabilities
-- This method is used when there’s an expected probability known beforehand and in this case the ACS data is being used as the expected counts/probabilities of ages in Eugene and Springfield. Then this is being compared to the observed counts of the CAHOOTS data. 
-- The input is the CAHOOTS data and ACS data for each city, because there are more ACS data points than CAHOOTS I scaled down the ACS data to match the scale of CAHOOTS
-- The CAHOOTS counts and the scaled proportions of ACS data are the inputs
-- The output is an X2 value, degrees of freedom, and a p-value that will be compared against the significance value of 0.05. 
-- This will be done for Eugene and Springfield separately 
-
-
-
+- For question 2 
+     - I created a heatmap of mean squared error to find the differences in age distributions between the different "Reasons for Dispatch"
+     - I then created a smoothed kernel density plot in order to more easily see the differences between the age distributions of each reason for dispatch
+          - To do this I used seaborn kdeplot
+- For question 3
+     - For this question I ran the analysis in R 
+     - The first step I did was import the cleaned data into R 
+     - Then I combined the Springfield and Eugene CAHOOTS data into a single dataframe 
+          - With this combined dataframe, I made an overlaid density plot for the age distributions of each city
+               - Using ggplot
+     - I then ran a Kolmogorov Smirnov (KS) to see if the overall distributions were significantly different 
+          - I used the R function ks.test
+     - Lastly, I ran a t test to see how the means of the two groups differed
+          - I used the R function t.test
+     - To help with visualizing the means, I added corresponding colored lines to show where the mean ages are for Springfield and Eugene, using the R function mean to find the means
+- For the 4th question I’m running a statistical test, Jonckheere Terpstra (JT) test, to see if the observed data from CAHOOTS matches up with estimated values from the ACS data from each city. To see exactly what groups are significantly different, I used a z-test for independent proportions
+     - I first imported reshape2, DescTools, and ggplot2
+     - The first step in this process was to import the cleaned CAHOOTS and ACS age data for both Springfield and Eugene from my cleaning file
+     - To make sure that I had a better understanding of what the JT test did, I created fake data and tried out the JT test on that to see if the result was what I expected. It was for both a significant and non-significant difference
+     - The next thing that I did was merge the ACS and CAHOOTS data together for Eugene and Springfield separately 
+          - On this merged dataset for Eugene I ran the JT test
+          - From DescTools the JT test is called as JonckheereTerpstraTest
+     - The ACS data had larger numbers than the CAHOOTS data, so I scaled down the data to be proportions of each age group out of the total
+     - Using the proportions, I created a paired barplot of ACS and CAHOOTS data for Eugene to better visualize these differences
+     - I first melted the data to get the visualization using melt from the reshape2 library
+     - To further analyze these differences, I wanted to know what groups specifically were different
+     - I decided to create a for loop that would loop through each row of data, where each row is a different age group, and perform a z test for independent proportions between the ACS proportion and the CAHOOTS proportion
+          - This was done using the prop.test function
+- I repeated these steps on the Springfield data for CAHOOTS and ACS
