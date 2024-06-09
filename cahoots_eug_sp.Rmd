@@ -1,0 +1,73 @@
+---
+title: "ks_test"
+output: html_document
+date: "2024-05-18"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+```
+
+```{r import data}
+
+eugene_CAHOOTS <- read.csv("cahoots_age_ks.csv")
+springfield_CAHOOTS <- read.csv("cahoots_age_sp_ks.csv")
+```
+
+```{r could be helpful to overlay these graphs}
+combined_data <- rbind(eugene_CAHOOTS, springfield_CAHOOTS) 
+```
+
+
+```{r}
+eugene_mean <- mean(eugene_CAHOOTS$Age)
+springfield_mean <- mean(springfield_CAHOOTS$Age)
+
+ggplot(combined_data, aes(x = Age, fill = City, color = City, after_stat(density))) + geom_density(alpha = 0.5, adjust = 1) +
+  scale_fill_manual(values = c("Springfield" = "blue", "Eugene" = "red")) +
+  scale_color_manual(values = c("Springfield" = "blue", "Eugene" = "red")) +
+  labs(x = "Age",
+       y = "Density",
+       fill = "City") + theme(legend.position = c(.9, .8), legend.key.size = unit(1, 'cm'), axis.text= element_text(size=15), axis.title.x = element_text(size=18),  # Increase x-axis label size
+    axis.title.y = element_text(size=18))  + geom_vline(xintercept=eugene_mean, color="red")+ geom_vline(xintercept=springfield_mean, color="blue")
+
+
+
+
+```
+
+
+```{r}
+ks_test_result <- ks.test(eugene_CAHOOTS$Age, springfield_CAHOOTS$Age)
+print(ks_test_result)
+
+# tells us that the overall distributions are different
+
+```
+
+```{r}
+#  stats for Eugene
+eugene_stats <- summary(eugene_CAHOOTS$Age)
+
+#  stats for Springfield
+springfield_stats <- summary(springfield_CAHOOTS$Age)
+
+cat("Eugene:\n", eugene_stats)
+cat("Springfield:\n", springfield_stats)
+mean(eugene_CAHOOTS$Age)
+mean(springfield_CAHOOTS$Age)
+
+length(eugene_CAHOOTS$Age)
+length(springfield_CAHOOTS$Age)
+```
+
+```{r t test}
+
+
+t_test_result <- t.test(eugene_CAHOOTS$Age, springfield_CAHOOTS$Age, alternative = "two.sided")
+print(t_test_result)
+
+# tells us that the means are similar
+
+```
