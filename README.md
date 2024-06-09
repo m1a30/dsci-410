@@ -26,6 +26,7 @@ The data that I’m using to address research questions are the CAHOOTS 2021, 20
      - This was done using the packages of statistics, numpy, seaborn, and matplotlib.pyplot
 - For question 2 
      - I created a heatmap of mean squared error to find the differences in age distributions between the different "Reasons for Dispatch"
+            - I created a function to find mean squared error, then used the seaborn heatmap function
      - I then created a smoothed kernel density plot in order to more easily see the differences between the age distributions of each reason for dispatch
           - To do this I used seaborn kdeplot
 - For question 3
